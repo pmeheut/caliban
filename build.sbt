@@ -19,6 +19,7 @@ val playVersion            = "2.8.13"
 val playJsonVersion        = "2.9.2"
 val sttpVersion            = "3.3.18"
 val tapirVersion           = "0.20.0"
+val scalafmtVersion        = "3.1.2"
 val zioVersion             = "1.0.13"
 val zioInteropCats2Version = "2.5.1.0"
 val zioInteropCats3Version = "3.2.9.1"
@@ -145,12 +146,20 @@ lazy val tools = project
   .in(file("tools"))
   .settings(name := "caliban-tools")
   .settings(commonSettings)
+  .enablePlugins(BuildInfoPlugin)
   .settings(
-    crossScalaVersions -= scala3,
+    buildInfoKeys    := Seq[BuildInfoKey](
+      "scalaPartialVersion" -> CrossVersion.partialVersion(scalaVersion.value),
+      "scalafmtVersion"     -> scalafmtVersion
+    ),
+    buildInfoPackage := "caliban.tools",
+    buildInfoObject  := "BuildInfo"
+  )
+  .settings(
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     libraryDependencies ++= Seq(
-      "org.scalameta"                 %% "scalafmt-dynamic"              % "3.1.2",
-      "org.scalameta"                 %% "scalafmt-core"                 % "3.1.2",
+      "org.scalameta"                  % "scalafmt-interfaces"           % scalafmtVersion,
+      "io.get-coursier"                % "interface"                     % "1.0.6",
       "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio" % sttpVersion,
       "dev.zio"                       %% "zio-config"                    % zioConfigVersion,
       "dev.zio"                       %% "zio-config-magnolia"           % zioConfigVersion,
@@ -366,9 +375,15 @@ lazy val clientLaminext = crossProject(JSPlatform)
   .dependsOn(clientJS)
   .settings(
     testFrameworks                         := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-    Test / scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
-    Test / scalaJSLinkerConfig ~= { _.withModuleSplitStyle(ModuleSplitStyle.FewestModules) },
-    Test / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
+    Test / scalaJSLinkerConfig ~= {
+      _.withModuleKind(ModuleKind.ESModule)
+    },
+    Test / scalaJSLinkerConfig ~= {
+      _.withModuleSplitStyle(ModuleSplitStyle.FewestModules)
+    },
+    Test / scalaJSLinkerConfig ~= {
+      _.withSourceMap(false)
+    },
     Test / scalaJSUseMainModuleInitializer := true,
     Test / scalaJSUseTestModuleInitializer := false,
     libraryDependencies ++= Seq(

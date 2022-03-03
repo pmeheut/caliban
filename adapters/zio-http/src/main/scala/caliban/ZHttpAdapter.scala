@@ -43,6 +43,7 @@ object ZHttpAdapter {
     webSocketHooks: WebSocketHooks[R, E] = WebSocketHooks.empty
   ): HttpApp[R with Clock, E] =
     Http.responseZIO[R with Clock, E](
+//    Http.fromEffect(
       for {
         ref <- Ref.make(Map.empty[String, Promise[Any, Unit]])
         app <- Response.fromSocketApp[R with Clock](
